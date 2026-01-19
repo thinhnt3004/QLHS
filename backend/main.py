@@ -7,6 +7,7 @@ from config import settings
 from routes.auth import router as auth_router
 from routes.students import router as students_router
 from routes.grades import router as grades_router
+from routes.import_data import router as import_router
 
 # Khởi tạo FastAPI
 app = FastAPI(
@@ -28,6 +29,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(students_router)
 app.include_router(grades_router)
+app.include_router(import_router)
 
 # Root endpoint
 @app.get("/")

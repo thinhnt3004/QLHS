@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { studentAPI } from "@/lib/api";
-import { FiPlus, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiDownload } from "react-icons/fi";
+import StudentForm from "@/components/StudentForm";
+import ExcelImport from "@/components/ExcelImport";
+import Notification, { useNotification } from "@/components/Notification";
+import { generateStudentReport } from "@/lib/pdf-export";
 
 interface Student {
   student_id: number;
@@ -18,6 +22,9 @@ export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<number | undefined>();
+  const { notification, showNotification } = useNotification();
 
   useEffect(() => {
     fetchStudents();
@@ -30,8 +37,54 @@ export default function StudentsPage() {
       setStudents(response.data.data);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách học sinh:", error);
+      showNotification("error", "Lỗi tải dữ liệu");
     }
     setLoading(false);
+  };
+
+  const handleAddStudent = () => {
+    setSelectedStudent(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleEditStudent = (studentId: number) => {
+    setSelectedStudent(studentId);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteStudent = async (studentId: number) => {
+    if (confirm("Xác nhận xóa?")) {
+      try {
+        await studentAPI.delete(studentId);
+        fetchStudents();
+        showNotification("success", "Xóa thành công");
+      } catch (error) {
+        showNotification("error", "Lỗi xóa học sinh");
+      }
+    }
+  };
+
+  const handleImportExcel = async (data: any[]) => {
+    try {
+      for (const row of data) {
+        await studentAPI.create({
+          student_code: row["Mã HS"],
+          student_name: row["Tên HS"],
+          email: row["Email"],
+          phone: row["Điện thoại"],
+          class_id: 1,
+        });
+      }
+      fetchStudents();
+      showNotification("success", `Import ${data.length} học sinh thành công`);
+    } catch (error) {
+      showNotification("error", "Lỗi import Excel");
+    }
+  };
+
+  const handleExportPDF = () => {
+    generateStudentReport(students, "Tất cả lớp");
+    showNotification("success", "Xuất PDF thành công");
   };
 
   const filteredStudents = students.filter((student) =>
@@ -41,11 +94,23 @@ export default function StudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Quản Lý Học Sinh</h1>
-        <button className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700">
-          <FiPlus /> Thêm Học Sinh
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleAddStudent}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
+          >
+            <FiPlus /> Thêm
+          </button>
+          <ExcelImport onImport={handleImportExcel} />
+          <button
+            onClick={handleExportPDF}
+            className="bg-purple-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700"
+          >
+            <FiDownload /> PDF
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -93,10 +158,16 @@ export default function StudentsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-3 text-center space-x-2">
-                    <button className="text-blue-600 hover:text-blue-800">
+                    <button
+                      onClick={() => handleEditStudent(student.student_id)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
                       <FiEdit2 />
                     </button>
-                    <button className="text-red-600 hover:text-red-800">
+                    <button
+                      onClick={() => handleDeleteStudent(student.student_id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
                       <FiTrash2 />
                     </button>
                   </td>
@@ -106,6 +177,15 @@ export default function StudentsPage() {
           </table>
         </div>
       )}
+
+      <StudentForm
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchStudents}
+        studentId={selectedStudent}
+      />
+
+      <Notification notification={notification} />
     </div>
   );
 }
