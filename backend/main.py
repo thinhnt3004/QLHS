@@ -4,6 +4,7 @@ FastAPI Server - Hệ thống Quản lý Trường Học & Học Sinh
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
+from routes.auth import router as auth_router
 from routes.students import router as students_router
 from routes.grades import router as grades_router
 
@@ -24,6 +25,7 @@ app.add_middleware(
 )
 
 # Đăng ký routes
+app.include_router(auth_router)
 app.include_router(students_router)
 app.include_router(grades_router)
 
