@@ -147,7 +147,11 @@ export default function StudentsPage() {
               {filteredStudents.map((student) => (
                 <tr key={student.student_id} className="border-b hover:bg-gray-50">
                   <td className="px-6 py-3 text-gray-700">{student.student_code}</td>
-                  <td className="px-6 py-3 font-semibold text-gray-900">{student.student_name}</td>
+                  <td className="px-6 py-3 font-semibold text-gray-900">
+                    <a href={`/students/${student.student_id}`} className="text-blue-600 hover:underline">
+                      {student.student_name}
+                    </a>
+                  </td>
                   <td className="px-6 py-3 text-gray-600">{student.email || "-"}</td>
                   <td className="px-6 py-3 text-gray-700">{student.class_name}</td>
                   <td className="px-6 py-3">
