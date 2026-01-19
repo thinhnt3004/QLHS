@@ -198,7 +198,7 @@ BEGIN
     FROM Students s
     JOIN Users u ON s.StudentID = u.UserID
     LEFT JOIN Grades g ON s.StudentID = g.StudentID
-    WHERE s.ClassID = @ClassID AND g.FinalPoint < 5.0
+    WHERE s.ClassID = @ClassID
     GROUP BY s.StudentID, s.StudentCode, u.FullName
     HAVING AVG(g.FinalPoint) < 5.0
     ORDER BY AVG(g.FinalPoint) ASC;
