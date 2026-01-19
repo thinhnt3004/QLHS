@@ -113,7 +113,7 @@ AS
 SELECT 
     ROW_NUMBER() OVER (PARTITION BY c.ClassID ORDER BY sg.GPA DESC) as ClassRanking,
     s.StudentCode,
-    s.FullName as StudentName,
+    u.FullName as StudentName,
     c.ClassName,
     COUNT(g.GradeID) as TotalSubjects,
     SUM(CASE WHEN g.Status = N'Đạt' THEN 1 ELSE 0 END) as PassedSubjects,
@@ -121,10 +121,11 @@ SELECT
     sg.Classification,
     sg.UpdatedDate
 FROM Students s
+JOIN Users u ON s.StudentID = u.UserID
 JOIN Classes c ON s.ClassID = c.ClassID
 LEFT JOIN Grades g ON s.StudentID = g.StudentID
 LEFT JOIN StudentGPA sg ON s.StudentID = sg.StudentID
-GROUP BY s.StudentID, s.StudentCode, s.FullName, c.ClassID, c.ClassName, sg.GPA, sg.Classification, sg.UpdatedDate;
+GROUP BY s.StudentID, s.StudentCode, u.FullName, c.ClassID, c.ClassName, sg.GPA, sg.Classification, sg.UpdatedDate;
 GO
 
 -- 4. VIEW: Danh sách học sinh có nguy cơ không đạt
@@ -132,15 +133,16 @@ CREATE OR ALTER VIEW vw_AtRiskStudents
 AS
 SELECT 
     s.StudentCode,
-    s.FullName as StudentName,
+    u.FullName as StudentName,
     c.ClassName,
     AVG(g.FinalPoint) as AverageGrade,
     SUM(CASE WHEN g.FinalPoint < 5.0 THEN 1 ELSE 0 END) as FailedCount,
     CAST(SUM(CASE WHEN g.FinalPoint < 5.0 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(g.GradeID), 0) AS DECIMAL(5,2)) as FailureRate
 FROM Students s
+JOIN Users u ON s.StudentID = u.UserID
 JOIN Classes c ON s.ClassID = c.ClassID
 LEFT JOIN Grades g ON s.StudentID = g.StudentID
-GROUP BY s.StudentID, s.StudentCode, s.FullName, c.ClassID, c.ClassName
+GROUP BY s.StudentID, s.StudentCode, u.FullName, c.ClassID, c.ClassName
 HAVING AVG(g.FinalPoint) < 5.0;
 GO
 
@@ -166,16 +168,17 @@ BEGIN
     SELECT 
         ROW_NUMBER() OVER (ORDER BY sg.GPA DESC) as Ranking,
         s.StudentCode,
-        s.FullName as StudentName,
+        u.FullName as StudentName,
         COUNT(g.GradeID) as TotalSubjects,
         AVG(g.FinalPoint) as AverageGrade,
         sg.GPA,
         sg.Classification
     FROM Students s
+    JOIN Users u ON s.StudentID = u.UserID
     LEFT JOIN Grades g ON s.StudentID = g.StudentID
     LEFT JOIN StudentGPA sg ON s.StudentID = sg.StudentID
     WHERE s.ClassID = @ClassID
-    GROUP BY s.StudentID, s.StudentCode, s.FullName, sg.GPA, sg.Classification
+    GROUP BY s.StudentID, s.StudentCode, u.FullName, sg.GPA, sg.Classification
     ORDER BY sg.GPA DESC;
 END;
 GO
@@ -187,15 +190,16 @@ AS
 BEGIN
     SELECT 
         s.StudentCode,
-        s.FullName as StudentName,
+        u.FullName as StudentName,
         COUNT(g.GradeID) as TotalSubjects,
         SUM(CASE WHEN g.FinalPoint < 5.0 THEN 1 ELSE 0 END) as FailedCount,
         AVG(g.FinalPoint) as AverageGrade,
         CAST(SUM(CASE WHEN g.FinalPoint < 5.0 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(g.GradeID), 0) AS DECIMAL(5,2)) as FailureRate
     FROM Students s
+    JOIN Users u ON s.StudentID = u.UserID
     LEFT JOIN Grades g ON s.StudentID = g.StudentID
     WHERE s.ClassID = @ClassID AND g.FinalPoint < 5.0
-    GROUP BY s.StudentID, s.StudentCode, s.FullName
+    GROUP BY s.StudentID, s.StudentCode, u.FullName
     HAVING AVG(g.FinalPoint) < 5.0
     ORDER BY AVG(g.FinalPoint) ASC;
 END;
