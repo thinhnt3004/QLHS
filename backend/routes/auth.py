@@ -15,7 +15,7 @@ def register(user: UserCreate):
     # Kiểm tra user đã tồn tại
     existing = UserModel.get_by_username(user.username)
     if existing:
-        raise HTTPException(status_code=400, detail=N"Username đã tồn tại")
+        raise HTTPException(status_code=400, detail="Username đã tồn tại")
     
     result = UserModel.create(
         username=user.username,
@@ -47,7 +47,7 @@ def login(credentials: UserLogin):
     user_data = UserModel.get_by_username(credentials.username)
     
     if not user_data:
-        raise HTTPException(status_code=401, detail=N"Username hoặc password sai")
+        raise HTTPException(status_code=401, detail="Username hoặc password sai")
     
     row = user_data[0]
     user_id = row[0]
@@ -60,10 +60,10 @@ def login(credentials: UserLogin):
     
     # Kiểm tra mật khẩu
     if not UserModel.verify_password(credentials.password, password_hash):
-        raise HTTPException(status_code=401, detail=N"Username hoặc password sai")
+        raise HTTPException(status_code=401, detail="Username hoặc password sai")
     
     if status != "Active":
-        raise HTTPException(status_code=403, detail=N"User bị khóa")
+        raise HTTPException(status_code=403, detail="User bị khóa")
     
     # Tạo token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -89,19 +89,19 @@ def login(credentials: UserLogin):
 def get_current_user(authorization: str = Header(None)):
     """Lấy thông tin user hiện tại"""
     if not authorization:
-        raise HTTPException(status_code=401, detail=N"Không có token")
+        raise HTTPException(status_code=401, detail="Không có token")
     
     try:
         token = authorization.split(" ")[1]
         payload = verify_token(token)
         if not payload:
-            raise HTTPException(status_code=401, detail=N"Token không hợp lệ")
+            raise HTTPException(status_code=401, detail="Token không hợp lệ")
         
         user_id = payload.get("user_id")
         user_data = UserModel.get_by_id(user_id)
         
         if not user_data:
-            raise HTTPException(status_code=404, detail=N"User không tồn tại")
+            raise HTTPException(status_code=404, detail="User không tồn tại")
         
         row = user_data[0]
         return {
@@ -118,4 +118,4 @@ def get_current_user(authorization: str = Header(None)):
 @router.post("/logout")
 def logout():
     """Đăng xuất (client sẽ xóa token)"""
-    return {"message": N"Đăng xuất thành công"}
+    return {"message": "Đăng xuất thành công"}

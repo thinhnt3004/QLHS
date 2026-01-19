@@ -52,7 +52,7 @@ class GradeModel:
         """Nhập điểm học sinh"""
         # Tính điểm bộ môn = (QT*0.2 + GK*0.3 + CK*0.5)
         final_point = (continuous * 0.2) + (midterm * 0.3) + (final * 0.5)
-        status = N'Đạt' if final_point >= 5.0 else N'Không đạt'
+        status = 'Đạt' if final_point >= 5.0 else 'Không đạt'
         
         query = """
         INSERT INTO Grades 
