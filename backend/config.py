@@ -5,10 +5,10 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # SQL Server
-    SQL_SERVER: str = "DESKTOP-YOUR-PC"
+    SQL_SERVER: str = "LAPTOP-RQL701VS"
     DATABASE: str = "SchoolManagement"
-    USERNAME: str = "sa"
-    PASSWORD: str = "your_password"
+    USERNAME: str = "LAPTOP-RQL701VS\\HP"
+    PASSWORD: str = ""
     
     # API
     API_TITLE: str = "School Management API"
